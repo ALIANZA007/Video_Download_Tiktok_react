@@ -1,61 +1,66 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import './App.css'
-/* logic */
-const PasswordInput = () => {
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [allRequirementsMet, setAllRequirementsMet] = useState(false);
+import React, { useState } from 'react';
+import fetchTikTokData from './api';
+import './App.css';
 
-  const requirements = useMemo(() => [
-    { regex: /.{8,}/, text: 'At least 8 characters length' },
-    { regex: /[0-9]/, text: 'At least 1 number (0...9)' },
-    { regex: /[a-z]/, text: 'At least 1 lowercase letter (a...z)' },
-    { regex: /[^A-Za-z0-9]/, text: 'At least 1 special symbol (!...$)' },
-    { regex: /[A-Z]/, text: 'At least 1 uppercase letter (A...Z)' },
-  ], []);
+function App() {
+  const [url, setUrl] = useState('');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handlePasswordChange = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const responseData = await fetchTikTokData(url);
+      setData(responseData);
+      setError(null);
+    } catch (error) {
+      setError('An error occurred while fetching data.');
+      setData(null);
+    }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  useEffect(() => {
-    
-    const allMet = requirements.every((req) => req.regex.test(password));
-    setAllRequirementsMet(allMet);
-  }, [password, requirements]);
- /* contain */
   return (
-    <div className="wrapper">
-      <div className="pass-field">
-        <input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Create password"
-          value={password}
-          onChange={handlePasswordChange}
-        />
-        <i className={`fa-solid fa-eye${showPassword ? '-slash' : ''}`} onClick={togglePasswordVisibility}></i>
+    <div className="app-container">
+      <div className="video-background">
+        <video autoPlay muted loop className="video-bg">
+          <source src="https://res.cloudinary.com/deafnuhyi/video/upload/v1691783973/abstract-gradient-background_xqizdv.mp4" type="video/mp4" />
+        </video>
       </div>
       <div className="content">
-        <p>Password must contain:</p>
-        <ul className="requirement-list">
-          {requirements.map((req, index) => (
-            <li key={index} className={req.regex.test(password) ? 'valid' : ''}>
-              <i className={`fa-solid ${req.regex.test(password) ? 'fa-check' : 'fa-circle'}`}></i>
-              <span>{req.text}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className='wrapper'>
-      <button disabled={!allRequirementsMet}>Submit</button>
+        <h1>TikTok Video Downloader</h1>
+        <h3>Without WaterMark</h3>
+        <form onSubmit={handleSubmit} className="centered-form">
+          <div className="group">
+            <svg className="icon" aria-hidden="true" viewBox="0 0 24 24">
+              <g>
+                <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path>
+              </g>
+            </svg>
+            <input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Enter TikTok URL"
+              type="text"
+              className="input"
+            />
+          </div>
+          <button type="submit" className="button">
+            <span>Download</span>
+          </button>
+        </form>
+        {error && <p className="error-message">{error}</p>}
+        {data && (
+          <div className="video-container">
+            <video controls width="640" height="360">
+              <source src={data.data.play} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
       </div>
     </div>
   );
-};
+}
 
-export default PasswordInput;
+export default App;
